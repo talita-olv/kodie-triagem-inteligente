@@ -3,7 +3,7 @@
 **Desafio Técnico: IA e Automação · Caso 4.3 — Organização de Tarefas**  
 Node.js + Express + integração OpenAI **ou Gemini** + n8n · execução local sem Docker.
 
-> **Atualização do projeto (26/11/2026):** a API Express, o fluxo n8n e a persistência foram demonstrados com sucesso (6/6 nodes) em `AI_MODE=mock`. O backend passou a oferecer **Gemini como provedor de IA real** (`AI_MODE=live`, `AI_PROVIDER=gemini`), mantendo OpenAI como alternativa. A pessoa responsável pelo projeto **informou que a execução local do Gemini funcionou** e que preparou novos prints; **a verificação remota ainda está incompleta**, pois a branch `main` do GitHub contém apenas as capturas anteriores do modo simulado. Por isso, as evidências atuais não permitem declarar uma execução Gemini real comprovada no repositório. A tentativa anterior com OpenAI retornou `HTTP 429`.
+> **Situação da entrega (26/11/2026):** API Express, autenticação interna, encaminhamento e fluxo n8n de seis nodes implementados. Os **12 testes iniciais** passaram e a automação foi demonstrada primeiro em `SIMULACAO_SEM_IA`. O projeto ganhou suporte à **IA real Gemini**, e a responsável informou sucesso no teste local com `AI_MODE=live`. Os três arquivos de evidência nomeados `IA_REAL` foram publicados no GitHub no commit [`6117d4a`](https://github.com/talita-olv/kodie-triagem-inteligente/commit/6117d4a). **As imagens estão acessíveis, mas não foi possível inspecionar seu conteúdo binário nesta revisão**; assim, a presença dos arquivos não é uma verificação independente do retorno do modelo. A integração OpenAI original permanece disponível (seu teste anterior retornou HTTP 429).
 >
 > **Escopo educacional:** todas as unidades, solicitações e mensagens de teste são fictícias. Nenhuma ordem SAP ou intervenção de campo é disparada.
 
@@ -61,7 +61,7 @@ A prioridade P1 veio das **regras determinísticas de segurança da API**, mesmo
 | Camada | Tecnologia | Responsabilidade |
 |:--|:--|:--|
 | Back-end | Node.js 22+, Express 5 | Endpoints, autenticação, validação e registro |
-| IA real (implementada; comprovação documental pendente) | Google Gemini API ou OpenAI Responses API | Análise semântica com resposta JSON estruturada |
+| IA real (integração implementada; teste local relatado) | Google Gemini API ou OpenAI Responses API | Análise semântica com resposta JSON estruturada; capturas Gemini publicadas |
 | Prompt | `src/prompt.js` | Instruções e JSON Schema |
 | Automação | n8n 2.8.4 (local) | Webhook, transforms, HTTP e resposta |
 | Registro | JSON Lines (JSONL) | Persistência simples, idempotência por ID |
@@ -125,7 +125,7 @@ sh scripts/teste-endpoint.sh
 
 ### Configurar a integração real com IA (Gemini)
 
-Para validar de fato, execute `sh scripts/teste-endpoint.sh` com `AI_MODE=live` e `AI_PROVIDER=gemini`, confirme o campo `"modo":"IA_REAL"` na resposta e depois reexecute os seis nodes no n8n. O resultado precisa vir do modelo real, não de `mock` ou de um teste automatizado com HTTP simulado. **A pessoa responsável informou sucesso local; os prints de Gemini ainda não constam na branch publicada.**
+Para validar de fato, execute `sh scripts/teste-endpoint.sh` com `AI_MODE=live` e `AI_PROVIDER=gemini`, confirme o campo `"modo":"IA_REAL"` na resposta e depois reexecute os seis nodes no n8n. O resultado precisa vir do modelo real, não de `mock` ou de um teste automatizado com HTTP simulado. **A pessoa responsável informou sucesso local e as três capturas Gemini já estão na branch `main`. Confira nelas o campo `"modo":"IA_REAL"` antes da submissão.**
 
 **Caminho recomendado (Gemini):** siga [o guia passo a passo](docs/GUIA_GEMINI.md). Configure `AI_MODE=live`, `AI_PROVIDER=gemini`, `GEMINI_API_KEY` e `GEMINI_MODEL=gemini-3.5-flash-lite`. Não publique chaves. A API identifica o provedor no endpoint `/health`. A faixa gratuita do Gemini depende de elegibilidade, limite e disponibilidade na sua conta; o conteúdo enviado pode ser usado para melhoria de produtos do provedor. Use somente exemplos fictícios.
 
@@ -136,21 +136,35 @@ Para validar de fato, execute `sh scripts/teste-endpoint.sh` com `AI_MODE=live` 
 3. Execute o endpoint `POST /api/analisar` e confirme que o resultado mostra `"modo": "IA_REAL"`.
 4. Execute novamente o webhook n8n e substitua as capturas de classificação simulada pelas evidências de IA real.
 
-**Histórico da OpenAI:** a autenticação com `GET /v1/models` funcionou (`HTTP 200`), mas a Responses API retornou `HTTP 429`. Isso motivou a implementação do Gemini como alternativa. O relato de sucesso local com Gemini precisa ser acompanhado dos prints de `"modo":"IA_REAL"` e do fluxo completo para ficar comprovado na documentação pública.
+**Histórico da OpenAI:** a autenticação com `GET /v1/models` funcionou (`HTTP 200`), mas a Responses API retornou `HTTP 429`. Isso motivou a implementação do Gemini como alternativa. As três capturas Gemini foram publicadas; para comprovar tecnicamente a inferência real na avaliação, o print do Node 03 deve mostrar `"modo":"IA_REAL"` e o mesmo teste deve apresentar os seis nodes concluídos.
 
 ## 5. Evidências visuais da execução local (capturas originais)
 
-### Registro das evidências Gemini — a publicar
+### Execução com Gemini — capturas publicadas em 25/11/2026
 
-A execução local com Gemini foi **informada pela pessoa responsável**, mas os arquivos adicionais ainda **não aparecem na pasta remota** [`docs/evidencias/`](docs/evidencias/) consultada no GitHub. As imagens abaixo pertencem ao teste anterior em `SIMULACAO_SEM_IA` e permanecem para rastreabilidade. Para completar a comprovação de IA real, publicar os seguintes prints **sem nenhuma chave de API**:
+Os três arquivos abaixo foram **incluídos na branch `main`** no commit [`6117d4a`](https://github.com/talita-olv/kodie-triagem-inteligente/commit/6117d4a). A responsável informou que executou a integração em `AI_MODE=live` com `AI_PROVIDER=gemini`. O conteúdo visual das imagens não foi inspecionado automaticamente nesta revisão; confira o campo `"modo":"IA_REAL"` no Node 03 e a conclusão dos seis nodes antes de enviar o trabalho à avaliação.
 
-| Evidência esperada | Arquivo sugerido | Verificação necessária |
-|---|---|---|
-| Node 03 com classificação de IA real | `docs/evidencias/14-gemini-classificacao-ia-real.png` | OUTPUT contendo `"modo":"IA_REAL"` |
-| Fluxo n8n real concluído | `docs/evidencias/15-gemini-fluxo-completo.png` | Seis nodes verdes na mesma execução |
-| Protocolo gerado no teste Gemini | `docs/evidencias/16-gemini-protocolo.png` | Node 06 com protocolo, fila e prioridade |
+**Classificação — Node 03 (API e IA):**
 
-Após o envio desses arquivos, vinculá-los aqui e atualizar o registro em [`docs/VALIDACAO.md`](docs/VALIDACAO.md).
+![Captura enviada da API IA real Gemini](docs/evidencias/API%20IA_REAL.png)
+
+*Figura G1 — Captura enviada como evidência da análise com IA real. Verificar na imagem o retorno `IA_REAL` e a classificação recebida.*
+
+**Fluxo n8n — execução completa:**
+
+![Captura enviada do fluxo n8n com Gemini](docs/evidencias/Fluxo%20IA_REAL.png)
+
+*Figura G2 — Captura enviada da execução do workflow; verificar a sequência de seis nodes concluídos.*
+
+**Registro e resposta — Node 06:**
+
+![Captura enviada da resposta de protocolo IA real](docs/evidencias/RESPOSTA%20DE%20PROTOCOLO%20IA_REAL.png)
+
+*Figura G3 — Captura enviada do protocolo e status de triagem.*
+
+[Ver as imagens diretamente na pasta de evidências](docs/evidencias/) · [Guia de execução Gemini](docs/GUIA_GEMINI.md) · [Validação técnica](docs/VALIDACAO.md)
+
+### Histórico: demonstração em modo `mock`
 
 As imagens foram capturadas durante o teste real do **n8n + API Express em modo mock**, em 25/11/2026. Mostram configurações dos nodes e dados fictícios. **Não demonstram uma chamada concluída à OpenAI.** [Relatório ilustrado em PDF](docs/RELATORIO_EVIDENCIAS_KODIE.pdf).
 
@@ -222,7 +236,7 @@ kodie-triagem-inteligente/
 ├── examples/           # solicitações fictícias
 ├── scripts/            # testes via curl
 ├── docs/
-│   ├── evidencias/     # prints reais (modo mock) e índice
+│   ├── evidencias/     # capturas de simulação e capturas Gemini IA_REAL
 │   ├── RELATORIO_EVIDENCIAS_KODIE.pdf
 │   ├── VALIDACAO.md
 │   └── arquitetura.svg
@@ -245,22 +259,23 @@ kodie-triagem-inteligente/
 
 **Repositório publicado:** https://github.com/talita-olv/kodie-triagem-inteligente
 
-**Próxima atualização necessária:** enviar para a branch `main` os novos prints da execução real do Gemini. Se os arquivos já estão na pasta local, confirme com `git status` que estão efetivamente versionados, faça o commit/push caso ainda não tenham sido enviados e verifique-os pelo navegador. A existência de arquivos no computador não garante sua presença no GitHub.
+**Capturas Gemini publicadas:** `API IA_REAL.png`, `Fluxo IA_REAL.png` e `RESPOSTA DE PROTOCOLO IA_REAL.png`, na pasta `docs/evidencias/`. **A última edição deste README foi feita diretamente pelo GitHub.** Para sincronizar o computador antes de novos commits, execute `git pull --ff-only origin main` com a árvore de trabalho limpa.
 
 1. Use o repositório existente, sem criar outro.
 2. Confira `git status` e certifique-se de que `.env`, `node_modules` e `data/*.jsonl` não serão incluídos.
-3. Na pasta do projeto, depois de incluir as capturas de Gemini, execute (não copie novamente `.env`):
+3. Para futuras alterações no computador, execute (não copie nem publique `.env`):
 
 ```bash
 git status
-git add docs/evidencias README.md docs/VALIDACAO.md
-git status
-git commit -m "Documentar execucao real com Gemini"
+git pull --ff-only origin main
+# Edite os arquivos desejados e confira o status antes de publicar.
+git add docs README.md
+git commit -m "Atualizar documentacao da entrega KODIE"
 git push origin main
 ```
 
 4. Confira se o `README.md`, `docs/evidencias/`, `n8n/fluxo_triagem_kodie.json` e os testes estão no GitHub. A aba **Actions** executa a suíte automatizada, conforme as permissões do repositório.
-5. **Antes da avaliação final, confirme que os prints da execução real estão acessíveis no repositório** e que o modo `IA_REAL` aparece na evidência do Node 03. Não confundir integração implementada, execução local informada e prova publicada.
+5. **Antes da avaliação final, confira visualmente os prints publicados** e confirme que `IA_REAL` está visível no Node 03, que os seis nodes encerraram sem erros e que o protocolo corresponde à execução do Gemini.
 
 **Documentação do desafio:** o objetivo é demonstrar integração IA + API + n8n, organização/validação de dados e rastreabilidade. Uma execução mock, isoladamente, não satisfaz a exigência de IA funcional.
 
@@ -269,6 +284,6 @@ git push origin main
 - **Sem Docker:** o fluxo n8n permanece igual, com os mesmos seis nodes e URLs `127.0.0.1:3000`.
 - **Troca controlada:** `AI_MODE=live` e `AI_PROVIDER=gemini` usam uma chamada real ao modelo configurado; `AI_MODE=mock` mantém a demonstração antiga; `AI_PROVIDER=openai` conserva a integração original.
 - **Segurança:** nenhuma chave foi publicada no GitHub. A nova chave deve existir apenas no seu `.env` local. Não enviar dados reais de clientes/unidades ao nível gratuito.
-- **Critério de conclusão:** o resultado `"modo":"IA_REAL"` e o fluxo n8n completo precisam estar capturados e publicados. **Há relato de sucesso local, mas a evidência publicada de Gemini ainda não foi localizada.**
+- **Evidências:** as três capturas com nome `IA_REAL` estão no GitHub. O sucesso local foi informado pela responsável; a confirmação técnica independente depende da leitura dos outputs nos arquivos de imagem.
 
 Consulte [docs/GUIA_GEMINI.md](docs/GUIA_GEMINI.md) para os comandos exatos de Git Bash e atualização das evidências.
