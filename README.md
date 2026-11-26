@@ -1,9 +1,9 @@
 # KODIE | Triagem Inteligente de Solicitações de Manutenção
 
 **Desafio Técnico: IA e Automação · Caso 4.3 — Organização de Tarefas**  
-Node.js + Express + integração OpenAI + n8n · execução local sem Docker.
+Node.js + Express + integração OpenAI **ou Gemini** + n8n · execução local sem Docker.
 
-> **Situação atual (25/11/2026):** projeto implementado, **12 testes automatizados aprovados** e **fluxo n8n de 6 nodes executado com sucesso** no modo `AI_MODE=mock`. A execução do modelo **real** ainda não foi comprovada: a OpenAI respondeu `HTTP 429` ao tentar usar a API. A simulação **não é uma chamada de IA** e não satisfaz isoladamente o requisito de integração funcional real da KODIE.
+> **Situação atual (26/11/2026):** os 6 nodes do n8n foram demonstrados em `AI_MODE=mock`; o cliente Gemini foi implementado para testes com IA real e acrescentados testes automatizados com rede simulada. **Ainda falta executar uma chamada Gemini real e salvar as novas evidências**. A tentativa anterior com OpenAI retornou `HTTP 429`. A simulação não substitui IA real.
 >
 > **Escopo educacional:** todas as unidades, solicitações e mensagens de teste são fictícias. Nenhuma ordem SAP ou intervenção de campo é disparada.
 
@@ -20,7 +20,7 @@ O **caso 4.3 — Organização de Tarefas** foi escolhido para demonstrar como u
 1. **Node 01 — Webhook:** recebe uma solicitação via HTTP `POST` com `id`, `descricao`, `unidade` e `origem`.
 2. **Node 02 — Code (JS):** valida a descrição e normaliza os campos.
 3. **Node 03 — HTTP Request:** envia a entrada para a API Express `POST /api/analisar`.
-4. **API + IA:** com `AI_MODE=live`, solicita à OpenAI a classificação estruturada segundo JSON Schema; com `AI_MODE=mock`, usa exclusivamente um classificador determinístico de demonstração.
+4. **API + IA:** com `AI_MODE=live` e `AI_PROVIDER=gemini`, solicita ao Gemini uma classificação estruturada; `AI_PROVIDER=openai` preserva a opção original com Responses API. Com `AI_MODE=mock`, usa exclusivamente um classificador determinístico de demonstração.
 5. **Regras do back-end:** verificam riscos explícitos e elevam a prioridade quando há situações graves, como paralisação de bombeamento ou risco elétrico.
 6. **Node 04 — Code (JS):** organiza `solicitacao_id`, `categoria`, `prioridade`, `fila`, `setor` e `revisao_humana`.
 7. **Node 05 — HTTP Request:** chama `POST /api/encaminhamentos` para registrar o protocolo em uma fila demonstrativa JSONL.
@@ -61,7 +61,7 @@ A prioridade P1 veio das **regras determinísticas de segurança da API**, mesmo
 | Camada | Tecnologia | Responsabilidade |
 |:--|:--|:--|
 | Back-end | Node.js 22+, Express 5 | Endpoints, autenticação, validação e registro |
-| IA real (pendente de validação) | OpenAI Responses API | Análise semântica com Structured Outputs |
+| IA real (pendente de validação fim a fim) | Google Gemini API ou OpenAI Responses API | Análise semântica com resposta JSON estruturada |
 | Prompt | `src/prompt.js` | Instruções e JSON Schema |
 | Automação | n8n 2.8.4 (local) | Webhook, transforms, HTTP e resposta |
 | Registro | JSON Lines (JSONL) | Persistência simples, idempotência por ID |
@@ -125,7 +125,11 @@ sh scripts/teste-endpoint.sh
 
 ### Ativar a integração real com IA — pendente
 
-1. Configure **uma chave de API válida, com quota disponível**, em `OPENAI_API_KEY` no seu `.env`.
+**Caminho recomendado (Gemini):** siga [o guia passo a passo](docs/GUIA_GEMINI.md). Configure `AI_MODE=live`, `AI_PROVIDER=gemini`, `GEMINI_API_KEY` e `GEMINI_MODEL=gemini-3.5-flash-lite`. Não publique chaves. A API identifica o provedor no endpoint `/health`. A faixa gratuita do Gemini depende de elegibilidade, limite e disponibilidade na sua conta; o conteúdo enviado pode ser usado para melhoria de produtos do provedor. Use somente exemplos fictícios.
+
+**Alternativa original (OpenAI):**
+
+1. Configure **uma chave de API válida, com quota disponível**, em `OPENAI_API_KEY` no seu `.env` e selecione `AI_PROVIDER=openai`.
 2. Altere `AI_MODE=live`, salve e reinicie a API.
 3. Execute o endpoint `POST /api/analisar` e confirme que o resultado mostra `"modo": "IA_REAL"`.
 4. Execute novamente o webhook n8n e substitua as capturas de classificação simulada pelas evidências de IA real.
@@ -223,23 +227,32 @@ kodie-triagem-inteligente/
 - `AI_MODE=mock` é determinístico e não constitui IA. A etapa exigida de **modelo real** só estará comprovada depois de teste live bem-sucedido.
 - A IA pode errar e as regras não abrangem todos os riscos: decisões críticas exigem validação profissional.
 
-## 9. Publicar no GitHub e enviar à KODIE
+## 9. Atualizar o GitHub e enviar à KODIE
 
-1. Crie um novo repositório no GitHub chamado **`kodie-triagem-inteligente`**, sem gerar README na criação.
+**Repositório publicado:** https://github.com/talita-olv/kodie-triagem-inteligente
+
+1. Use o repositório existente, sem criar outro.
 2. Confira `git status` e certifique-se de que `.env`, `node_modules` e `data/*.jsonl` não serão incluídos.
 3. Na pasta do projeto, execute os comandos abaixo (troque `SEU_USUARIO`):
 
 ```bash
-git init
+git pull --ff-only
 git add .
 git status
-git commit -m "Entrega KODIE: API Express, n8n e evidencias reais de mock"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/kodie-triagem-inteligente.git
-git push -u origin main
+git commit -m "Evidencias da IA real Gemini"
+git push origin main
 ```
 
-4. Confira se o `README.md`, `docs/evidencias/`, `n8n/fluxo_triagem_kodie.json` e os testes estão no GitHub. A aba **Actions** deverá executar a suíte automatizada, conforme as permissões do repositório.
+4. Confira se o `README.md`, `docs/evidencias/`, `n8n/fluxo_triagem_kodie.json` e os testes estão no GitHub. A aba **Actions** executa a suíte automatizada, conforme as permissões do repositório.
 5. **Antes da avaliação final, conclua a integração real com IA** ou informe explicitamente a pendência. Consulte também [ENTREGA_KODIE.md](ENTREGA_KODIE.md) para o texto de submissão.
 
 **Documentação do desafio:** o objetivo é demonstrar integração IA + API + n8n, organização/validação de dados e rastreabilidade. Uma execução mock, isoladamente, não satisfaz a exigência de IA funcional.
+
+## 10. Atualização: provedor Gemini
+
+- **Sem Docker:** o fluxo n8n permanece igual, com os mesmos seis nodes e URLs `127.0.0.1:3000`.
+- **Troca controlada:** `AI_MODE=live` e `AI_PROVIDER=gemini` usam uma chamada real ao modelo configurado; `AI_MODE=mock` mantém a demonstração antiga; `AI_PROVIDER=openai` conserva a integração original.
+- **Segurança:** nenhuma chave foi publicada no GitHub. A nova chave deve existir apenas no seu `.env` local. Não enviar dados reais de clientes/unidades ao nível gratuito.
+- **Critério de conclusão:** o resultado `"modo":"IA_REAL"` e o fluxo n8n completo precisam ser observados na sua máquina. **Não afirmamos ter executado Gemini real nesta entrega.**
+
+Consulte [docs/GUIA_GEMINI.md](docs/GUIA_GEMINI.md) para os comandos exatos de Git Bash e atualização das evidências.
