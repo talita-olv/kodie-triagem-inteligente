@@ -7,7 +7,37 @@ Node.js + Express + integração OpenAI **ou Gemini** + n8n · execução local 
 >
 > **Escopo educacional:** todas as unidades, solicitações e mensagens de teste são fictícias. Nenhuma ordem SAP ou intervenção de campo é disparada.
 
+## Interface visual (diferencial opcional)
+
+A solução agora inclui uma **interface web responsiva** para apresentar a triagem sem precisar digitar comandos de requisição. Ela funciona **localmente**, servida pelo próprio Express, e não substitui o workflow n8n.
+
 ![Arquitetura da solução](docs/arquitetura.svg)
+
+**Abrir a interface no VS Code (Windows + Git Bash):**
+
+1. Na pasta do projeto, execute: 
+
+       git status
+       git pull --ff-only origin main
+       npm install
+       npm test
+
+2. Confirme as variáveis do seu **.env local** (AI_MODE=live, AI_PROVIDER=gemini, GEMINI_API_KEY e API_ACCESS_KEY). Não sobrescreva nem publique esse arquivo.
+3. Inicie a API:
+
+       node --env-file=.env src/server.js
+
+4. Abra **http://localhost:3000** no navegador.
+5. Digite a **API_ACCESS_KEY** no campo protegido da tela (não é a chave Gemini), preencha uma solicitação fictícia e escolha um dos modos:
+   - **Direto pela API Gemini** — análise e registro sem percorrer o n8n;
+   - **Fluxo completo pelo n8n** — exige n8n local aberto e Webhook em *Listen for test event*. É o modo indicado para demonstrar os seis nodes.
+6. Veja na tela a prioridade, setor responsável, protocolo e histórico dos encaminhamentos.
+
+A interface usa os endpoints da API existente e um proxy local de teste para o n8n; **não requer Docker nem hospedagem**. A chave digitada fica somente na memória da página. Não exponha a tela na internet sem controles adicionais de segurança.
+
+**Guia detalhado:** [docs/INTERFACE_WEB.md](docs/INTERFACE_WEB.md). A interface é um extra: o desafio KODIE continua sendo avaliado principalmente pela integração IA + API + n8n e suas evidências.
+
+
 
 ## 1. Ideia e problema escolhido
 
@@ -65,7 +95,7 @@ A prioridade P1 veio das **regras determinísticas de segurança da API**, mesmo
 | Prompt | `src/prompt.js` | Instruções e JSON Schema |
 | Automação | n8n 2.8.4 (local) | Webhook, transforms, HTTP e resposta |
 | Registro | JSON Lines (JSONL) | Persistência simples, idempotência por ID |
-| Testes | `node:test` | 12 testes aprovados na versão inicial + 4 testes de contrato Gemini acrescentados; execução atual a verificar |
+| Testes | `node:test` | Testes de regras, cliente Gemini, workflow e interface web; confirmação atual pelo GitHub Actions |
 | Versionamento | Git/GitHub, GitHub Actions | Código e testes CI |
 
 ## 4. Como executar sem Docker (Windows + Git Bash)
@@ -230,6 +260,7 @@ npm test
 
 ```text
 kodie-triagem-inteligente/
+├── public/             # interface web responsiva (HTML, CSS, JavaScript)
 ├── src/                # API Express, cliente IA, regras, prompt
 ├── n8n/                # JSON do fluxo local e opção original Docker
 ├── tests/              # testes Node
