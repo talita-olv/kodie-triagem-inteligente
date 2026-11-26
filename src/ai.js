@@ -73,9 +73,62 @@ export async function classifyLive(solicitacao, { fetchImpl = fetch, env = proce
   }
 }
 
+/** Integracao real com Gemini Developer API (sem SDK ou novas dependencias). */
+export async function classifyGeminiLive(solicitacao, { fetchImpl = fetch, env = process.env } = {}) {
+  const key = env.GEMINI_API_KEY;
+  if (!key || key.startsWith('coloque_')) {
+    throw new AppError(503, 'CHAVE_IA_AUSENTE', 'Configure GEMINI_API_KEY para usar Gemini com IA real.');
+  }
+  const model = env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+  if (!/^[a-zA-Z0-9._-]+$/.test(model)) {
+    throw new AppError(500, 'CONFIG_INVALIDA', 'GEMINI_MODEL contem caracteres invalidos.');
+  }
+  let res;
+  try {
+    res = await fetchImpl('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
+      method: 'POST',
+      headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [{ role: 'user', parts: [{ text: JSON.stringify({
+          descricao: solicitacao.descricao, unidade: solicitacao.unidade, origem: solicitacao.origem,
+        }) }] }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseJsonSchema: AI_SCHEMA,
+          temperature: 0.1,
+          maxOutputTokens: 2048,
+        },
+      }),
+      signal: AbortSignal.timeout(Number(env.GEMINI_TIMEOUT_MS || 45000)),
+    });
+  } catch {
+    throw new AppError(502, 'IA_INDISPONIVEL', 'Falha de conexao ou timeout no Gemini.');
+  }
+  if (!res.ok) {
+    throw new AppError(502, 'IA_INDISPONIVEL', 'Gemini respondeu com HTTP ' + res.status + '. Verifique chave, modelo e limites no AI Studio.');
+  }
+  let payload;
+  try { payload = await res.json(); }
+  catch { throw new AppError(502, 'RESPOSTA_IA_INVALIDA', 'Resposta Gemini nao e JSON.'); }
+  const candidate = payload.candidates?.[0];
+  const txt = candidate?.content?.parts?.map(part => part.text || '').join('');
+  if (!txt || (candidate.finishReason && candidate.finishReason !== 'STOP')) {
+    throw new AppError(502, 'RESPOSTA_IA_INVALIDA', 'Gemini nao concluiu a classificacao JSON.');
+  }
+  try { return validateAIOutput(JSON.parse(txt)); }
+  catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(502, 'RESPOSTA_IA_INVALIDA', 'A resposta Gemini nao contem JSON valido.');
+  }
+}
+
 export async function classify(solicitacao, options = {}) {
   const env = options.env || process.env;
   if (env.AI_MODE === 'mock') return classifyMock(solicitacao);
   if (env.AI_MODE && env.AI_MODE !== 'live') throw new AppError(500, 'CONFIG_INVALIDA', 'AI_MODE deve ser live ou mock.');
-  return classifyLive(solicitacao, options);
+  const provider = (env.AI_PROVIDER || 'openai').toLowerCase();
+  if (provider === 'gemini') return classifyGeminiLive(solicitacao, options);
+  if (provider === 'openai') return classifyLive(solicitacao, options);
+  throw new AppError(500, 'CONFIG_INVALIDA', 'AI_PROVIDER deve ser gemini ou openai.');
 }
