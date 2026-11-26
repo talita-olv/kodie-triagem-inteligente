@@ -30,7 +30,7 @@ function secured(req, res, next) {
   next();
 }
 
-app.get('/health', (req, res) => res.json({ status: 'ok', ia: env.AI_MODE === 'mock' ? 'mock' : 'live' }));
+app.get('/health', (req, res) => res.json({ status: 'ok', ia: env.AI_MODE === 'mock' ? 'mock' : 'live', provedor: env.AI_MODE === 'mock' ? 'simulacao' : (env.AI_PROVIDER || 'openai') }));
 app.post('/api/analisar', secured, async (req, res, next) => {
   try {
     const solicitacao = validateSolicitacao(req.body);
