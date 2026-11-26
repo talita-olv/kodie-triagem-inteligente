@@ -3,7 +3,7 @@
 **Desafio Técnico: IA e Automação · Caso 4.3 — Organização de Tarefas**  
 Node.js + Express + integração OpenAI **ou Gemini** + n8n · execução local sem Docker.
 
-> **Situação atual (26/11/2026):** os 6 nodes do n8n foram demonstrados em `AI_MODE=mock`; o cliente Gemini foi implementado para testes com IA real e acrescentados testes automatizados com rede simulada. **Ainda falta executar uma chamada Gemini real e salvar as novas evidências**. A tentativa anterior com OpenAI retornou `HTTP 429`. A simulação não substitui IA real.
+> **Atualização do projeto (26/11/2026):** a API Express, o fluxo n8n e a persistência foram demonstrados com sucesso (6/6 nodes) em `AI_MODE=mock`. O backend passou a oferecer **Gemini como provedor de IA real** (`AI_MODE=live`, `AI_PROVIDER=gemini`), mantendo OpenAI como alternativa. A pessoa responsável pelo projeto **informou que a execução local do Gemini funcionou** e que preparou novos prints; **a verificação remota ainda está incompleta**, pois a branch `main` do GitHub contém apenas as capturas anteriores do modo simulado. Por isso, as evidências atuais não permitem declarar uma execução Gemini real comprovada no repositório. A tentativa anterior com OpenAI retornou `HTTP 429`.
 >
 > **Escopo educacional:** todas as unidades, solicitações e mensagens de teste são fictícias. Nenhuma ordem SAP ou intervenção de campo é disparada.
 
@@ -61,11 +61,11 @@ A prioridade P1 veio das **regras determinísticas de segurança da API**, mesmo
 | Camada | Tecnologia | Responsabilidade |
 |:--|:--|:--|
 | Back-end | Node.js 22+, Express 5 | Endpoints, autenticação, validação e registro |
-| IA real (pendente de validação fim a fim) | Google Gemini API ou OpenAI Responses API | Análise semântica com resposta JSON estruturada |
+| IA real (implementada; comprovação documental pendente) | Google Gemini API ou OpenAI Responses API | Análise semântica com resposta JSON estruturada |
 | Prompt | `src/prompt.js` | Instruções e JSON Schema |
 | Automação | n8n 2.8.4 (local) | Webhook, transforms, HTTP e resposta |
 | Registro | JSON Lines (JSONL) | Persistência simples, idempotência por ID |
-| Testes | `node:test` | 12 verificações automatizadas |
+| Testes | `node:test` | 12 testes aprovados na versão inicial + 4 testes de contrato Gemini acrescentados; execução atual a verificar |
 | Versionamento | Git/GitHub, GitHub Actions | Código e testes CI |
 
 ## 4. Como executar sem Docker (Windows + Git Bash)
@@ -77,7 +77,7 @@ npm install
 cp .env.example .env
 ```
 
-Abra `.env` e defina `API_ACCESS_KEY` com um segredo **longo e aleatório**, mantendo `AI_MODE=mock` para o teste local sem consumo de créditos. **Não inclua** `.env`, prints de segredos ou `data/*.jsonl` no GitHub.
+Abra `.env` e defina `API_ACCESS_KEY` com um segredo **longo e aleatório**. Para usar **Gemini real**, configure `AI_MODE=live`, `AI_PROVIDER=gemini`, `GEMINI_API_KEY` e `GEMINI_MODEL` conforme o [guia Gemini](docs/GUIA_GEMINI.md). Para uma demonstração sem IA, utilize `AI_MODE=mock`. **Não inclua** `.env`, prints de segredos ou `data/*.jsonl` no GitHub.
 
 **Terminal 1 — API:**
 
@@ -85,7 +85,7 @@ Abra `.env` e defina `API_ACCESS_KEY` com um segredo **longo e aleatório**, man
 node --env-file=.env src/server.js
 ```
 
-Verifique `http://127.0.0.1:3000/health` — deve retornar `{"status":"ok","ia":"mock"}`.
+Verifique `http://127.0.0.1:3000/health`: no modo Gemini real, a resposta deve indicar `"ia":"live","provedor":"gemini"`; no modo simulado, `"ia":"mock","provedor":"simulacao"`. Este endpoint confirma **configuração**, não a conclusão de uma inferência.
 
 **Terminal 2 — n8n:**
 
@@ -123,7 +123,9 @@ export API_ACCESS_KEY="$(sed -n 's/^API_ACCESS_KEY=//p' .env | tr -d '\r')"
 sh scripts/teste-endpoint.sh
 ```
 
-### Ativar a integração real com IA — pendente
+### Configurar a integração real com IA (Gemini)
+
+Para validar de fato, execute `sh scripts/teste-endpoint.sh` com `AI_MODE=live` e `AI_PROVIDER=gemini`, confirme o campo `"modo":"IA_REAL"` na resposta e depois reexecute os seis nodes no n8n. O resultado precisa vir do modelo real, não de `mock` ou de um teste automatizado com HTTP simulado. **A pessoa responsável informou sucesso local; os prints de Gemini ainda não constam na branch publicada.**
 
 **Caminho recomendado (Gemini):** siga [o guia passo a passo](docs/GUIA_GEMINI.md). Configure `AI_MODE=live`, `AI_PROVIDER=gemini`, `GEMINI_API_KEY` e `GEMINI_MODEL=gemini-3.5-flash-lite`. Não publique chaves. A API identifica o provedor no endpoint `/health`. A faixa gratuita do Gemini depende de elegibilidade, limite e disponibilidade na sua conta; o conteúdo enviado pode ser usado para melhoria de produtos do provedor. Use somente exemplos fictícios.
 
@@ -134,9 +136,21 @@ sh scripts/teste-endpoint.sh
 3. Execute o endpoint `POST /api/analisar` e confirme que o resultado mostra `"modo": "IA_REAL"`.
 4. Execute novamente o webhook n8n e substitua as capturas de classificação simulada pelas evidências de IA real.
 
-**Situação verificada:** a autenticação com `GET /v1/models` foi bem-sucedida (`HTTP 200`), mas a requisição à Responses API retornou `HTTP 429`. Isso pode indicar limite de solicitações ou quota/faturamento; é necessário conferir a mensagem específica e as configurações da conta. A etapa real **não foi comprovada** e não deve ser assinalada como concluída no envio à KODIE.
+**Histórico da OpenAI:** a autenticação com `GET /v1/models` funcionou (`HTTP 200`), mas a Responses API retornou `HTTP 429`. Isso motivou a implementação do Gemini como alternativa. O relato de sucesso local com Gemini precisa ser acompanhado dos prints de `"modo":"IA_REAL"` e do fluxo completo para ficar comprovado na documentação pública.
 
 ## 5. Evidências visuais da execução local (capturas originais)
+
+### Registro das evidências Gemini — a publicar
+
+A execução local com Gemini foi **informada pela pessoa responsável**, mas os arquivos adicionais ainda **não aparecem na pasta remota** [`docs/evidencias/`](docs/evidencias/) consultada no GitHub. As imagens abaixo pertencem ao teste anterior em `SIMULACAO_SEM_IA` e permanecem para rastreabilidade. Para completar a comprovação de IA real, publicar os seguintes prints **sem nenhuma chave de API**:
+
+| Evidência esperada | Arquivo sugerido | Verificação necessária |
+|---|---|---|
+| Node 03 com classificação de IA real | `docs/evidencias/14-gemini-classificacao-ia-real.png` | OUTPUT contendo `"modo":"IA_REAL"` |
+| Fluxo n8n real concluído | `docs/evidencias/15-gemini-fluxo-completo.png` | Seis nodes verdes na mesma execução |
+| Protocolo gerado no teste Gemini | `docs/evidencias/16-gemini-protocolo.png` | Node 06 com protocolo, fila e prioridade |
+
+Após o envio desses arquivos, vinculá-los aqui e atualizar o registro em [`docs/VALIDACAO.md`](docs/VALIDACAO.md).
 
 As imagens foram capturadas durante o teste real do **n8n + API Express em modo mock**, em 25/11/2026. Mostram configurações dos nodes e dados fictícios. **Não demonstram uma chamada concluída à OpenAI.** [Relatório ilustrado em PDF](docs/RELATORIO_EVIDENCIAS_KODIE.pdf).
 
@@ -194,7 +208,7 @@ Veja o [índice completo das capturas e de seus significados](docs/evidencias/RE
 npm test
 ```
 
-**Teste local realizado em 25/11/2026:** 12 testes, 12 aprovados, 0 falhas, conforme saída compartilhada durante a montagem. A suíte contempla validação, regras de criticidade, registro sem duplicidade, resposta inválida de IA, teste do cliente HTTP com rede simulada e integridade estrutural do workflow. **Não é teste de conexão real com a OpenAI.**
+**Teste local originalmente demonstrado em 25/11/2026:** 12 testes, 12 aprovados, 0 falhas. Posteriormente foram adicionados 4 testes referentes ao cliente Gemini e ao roteamento de provedor. **Não há confirmação nesta documentação da execução atual de todos os testes**; rode `npm test` no código atualizado. Testes de contrato com `fetch` simulado não substituem uma chamada real ao provedor.
 
 [Registro de validação e pendências](docs/VALIDACAO.md).
 
@@ -231,20 +245,22 @@ kodie-triagem-inteligente/
 
 **Repositório publicado:** https://github.com/talita-olv/kodie-triagem-inteligente
 
+**Próxima atualização necessária:** enviar para a branch `main` os novos prints da execução real do Gemini. Se os arquivos já estão na pasta local, confirme com `git status` que estão efetivamente versionados, faça o commit/push caso ainda não tenham sido enviados e verifique-os pelo navegador. A existência de arquivos no computador não garante sua presença no GitHub.
+
 1. Use o repositório existente, sem criar outro.
 2. Confira `git status` e certifique-se de que `.env`, `node_modules` e `data/*.jsonl` não serão incluídos.
-3. Na pasta do projeto, execute os comandos abaixo (troque `SEU_USUARIO`):
+3. Na pasta do projeto, depois de incluir as capturas de Gemini, execute (não copie novamente `.env`):
 
 ```bash
-git pull --ff-only
-git add .
 git status
-git commit -m "Evidencias da IA real Gemini"
+git add docs/evidencias README.md docs/VALIDACAO.md
+git status
+git commit -m "Documentar execucao real com Gemini"
 git push origin main
 ```
 
 4. Confira se o `README.md`, `docs/evidencias/`, `n8n/fluxo_triagem_kodie.json` e os testes estão no GitHub. A aba **Actions** executa a suíte automatizada, conforme as permissões do repositório.
-5. **Antes da avaliação final, conclua a integração real com IA** ou informe explicitamente a pendência. Consulte também [ENTREGA_KODIE.md](ENTREGA_KODIE.md) para o texto de submissão.
+5. **Antes da avaliação final, confirme que os prints da execução real estão acessíveis no repositório** e que o modo `IA_REAL` aparece na evidência do Node 03. Não confundir integração implementada, execução local informada e prova publicada.
 
 **Documentação do desafio:** o objetivo é demonstrar integração IA + API + n8n, organização/validação de dados e rastreabilidade. Uma execução mock, isoladamente, não satisfaz a exigência de IA funcional.
 
@@ -253,6 +269,6 @@ git push origin main
 - **Sem Docker:** o fluxo n8n permanece igual, com os mesmos seis nodes e URLs `127.0.0.1:3000`.
 - **Troca controlada:** `AI_MODE=live` e `AI_PROVIDER=gemini` usam uma chamada real ao modelo configurado; `AI_MODE=mock` mantém a demonstração antiga; `AI_PROVIDER=openai` conserva a integração original.
 - **Segurança:** nenhuma chave foi publicada no GitHub. A nova chave deve existir apenas no seu `.env` local. Não enviar dados reais de clientes/unidades ao nível gratuito.
-- **Critério de conclusão:** o resultado `"modo":"IA_REAL"` e o fluxo n8n completo precisam ser observados na sua máquina. **Não afirmamos ter executado Gemini real nesta entrega.**
+- **Critério de conclusão:** o resultado `"modo":"IA_REAL"` e o fluxo n8n completo precisam estar capturados e publicados. **Há relato de sucesso local, mas a evidência publicada de Gemini ainda não foi localizada.**
 
 Consulte [docs/GUIA_GEMINI.md](docs/GUIA_GEMINI.md) para os comandos exatos de Git Bash e atualização das evidências.
