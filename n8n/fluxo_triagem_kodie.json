@@ -1,0 +1,172 @@
+{
+  "name": "KODIE | Triagem Inteligente - Local sem Docker",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kodie-triagem",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "19e567ae-40f6-506d-bf22-84888ce1930b",
+      "name": "01 - Receber solicitacao",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -760,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $input.first().json.body ?? {};\nif (typeof body.descricao !== 'string' || body.descricao.trim().length < 15) {\n  throw new Error('Informe descricao com pelo menos 15 caracteres.');\n}\nreturn [{json: {\n  id: body.id || `SOL-${Date.now()}`,\n  descricao: body.descricao,\n  unidade: body.unidade || '',\n  origem: body.origem || 'n8n-webhook'\n}}];"
+      },
+      "id": "1de0d299-f27c-5753-98d9-a471415503ff",
+      "name": "02 - Validar e normalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -490,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/api/analisar",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "761f9785-248a-54d1-a4a8-adbc112fe38e",
+      "name": "03 - API Express + IA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -210,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const entrada = $input.first().json;\nif (!entrada.decisao?.fila || !entrada.solicitacao?.id) {\n  throw new Error('API nao retornou os campos de triagem esperados.');\n}\nconst d = entrada.decisao;\nreturn [{json: {\n  solicitacao_id: entrada.solicitacao.id,\n  resumo: entrada.classificacao_ia.resumo,\n  setor: d.setor,\n  fila: d.fila,\n  prioridade: d.prioridade,\n  categoria: d.categoria,\n  status: d.status,\n  revisao_humana: d.revisao_humana\n}}];"
+      },
+      "id": "a623065a-bda6-5a31-a8e6-9dc5e31c7963",
+      "name": "04 - Definir fila setorial",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/api/encaminhamentos",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "2a919108-6e42-59ce-b754-1e50303d5372",
+      "name": "05 - Registrar encaminhamento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        350,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "id": "a614b54e-365c-54fa-baf2-99805c23e7b4",
+      "name": "06 - Responder protocolo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        630,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "01 - Receber solicitacao": {
+      "main": [
+        [
+          {
+            "node": "02 - Validar e normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Validar e normalizar": {
+      "main": [
+        [
+          {
+            "node": "03 - API Express + IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 - API Express + IA": {
+      "main": [
+        [
+          {
+            "node": "04 - Definir fila setorial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - Definir fila setorial": {
+      "main": [
+        [
+          {
+            "node": "05 - Registrar encaminhamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 - Registrar encaminhamento": {
+      "main": [
+        [
+          {
+            "node": "06 - Responder protocolo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}

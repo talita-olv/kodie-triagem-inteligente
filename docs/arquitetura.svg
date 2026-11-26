@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 370" role="img" aria-label="Diagrama de arquitetura do sistema de triagem de solicitacoes">
+  <rect width="1160" height="370" rx="20" fill="#0c1729"/>
+  <text x="42" y="47" fill="#e7eefb" font-size="25" font-family="Arial,sans-serif" font-weight="700">Triagem Inteligente — Arquitetura</text>
+  <text x="42" y="76" fill="#a8b9d1" font-size="14" font-family="Arial,sans-serif">Do relato em texto à fila responsável, com controle de prioridade e revisão humana</text>
+  <g font-family="Arial,sans-serif">
+    <rect x="42" y="133" width="166" height="108" rx="13" fill="#1b314d" stroke="#436484" stroke-width="1.5"/>
+    <text x="125" y="171" fill="#ffffff" font-size="17" text-anchor="middle" font-weight="700">Solicitação</text>
+    <text x="125" y="194" fill="#c3d6e6" font-size="12" text-anchor="middle">JSON / mensagem</text>
+    <text x="125" y="214" fill="#c3d6e6" font-size="12" text-anchor="middle">(dados fictícios)</text>
+    <rect x="256" y="133" width="180" height="108" rx="13" fill="#153d44" stroke="#47a5a5" stroke-width="1.5"/>
+    <text x="346" y="170" fill="#ffffff" font-size="17" text-anchor="middle" font-weight="700">n8n</text>
+    <text x="346" y="195" fill="#c3e5e5" font-size="12" text-anchor="middle">Webhook e normalização</text>
+    <text x="346" y="215" fill="#c3e5e5" font-size="12" text-anchor="middle">Roteamento e protocolo</text>
+    <rect x="485" y="133" width="176" height="108" rx="13" fill="#1b314d" stroke="#436484" stroke-width="1.5"/>
+    <text x="573" y="171" fill="#ffffff" font-size="17" text-anchor="middle" font-weight="700">API Express</text>
+    <text x="573" y="194" fill="#c3d6e6" font-size="12" text-anchor="middle">Validação e regras</text>
+    <text x="573" y="214" fill="#c3d6e6" font-size="12" text-anchor="middle">Prioridade P1–P4</text>
+    <rect x="708" y="133" width="166" height="108" rx="13" fill="#26375a" stroke="#8fa8e6" stroke-width="1.5"/>
+    <text x="791" y="170" fill="#ffffff" font-size="17" text-anchor="middle" font-weight="700">API de IA</text>
+    <text x="791" y="193" fill="#d3dafa" font-size="12" text-anchor="middle">Prompt estruturado</text>
+    <text x="791" y="213" fill="#d3dafa" font-size="12" text-anchor="middle">JSON Schema</text>
+    <rect x="925" y="133" width="190" height="108" rx="13" fill="#154236" stroke="#4bb68c" stroke-width="1.5"/>
+    <text x="1020" y="170" fill="#ffffff" font-size="17" text-anchor="middle" font-weight="700">Fila registrada</text>
+    <text x="1020" y="194" fill="#c7eede" font-size="12" text-anchor="middle">JSONL + protocolo</text>
+    <text x="1020" y="214" fill="#c7eede" font-size="12" text-anchor="middle">Pendência de atendimento</text>
+    <g stroke="#92b5cb" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M208 187 H253"/><path d="M247 181 l8 6 -8 6"/>
+      <path d="M436 187 H482"/><path d="M476 181 l8 6 -8 6"/>
+      <path d="M661 187 H705"/><path d="M699 181 l8 6 -8 6"/>
+      <path d="M874 187 H922"/><path d="M916 181 l8 6 -8 6"/>
+    </g>
+    <text x="580" y="294" fill="#a8b9d1" font-size="13" text-anchor="middle">A IA sugere; regras de contenção e pessoas validam os casos críticos.</text>
+    <text x="580" y="320" fill="#94aecd" font-size="12" text-anchor="middle">Fluxo de ida/volta entre n8n e Express simplificado para leitura.</text>
+  </g>
+</svg>
