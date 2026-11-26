@@ -1,10 +1,22 @@
-# Índice de evidências reais — n8n + API Express em modo mock
+# Índice de evidências — n8n + Express + Gemini (execução real e simulação)
 
-**Capturas feitas em 25/11/2026** durante o teste de uma solicitação fictícia. Todas correspondem ao ambiente local do aluno; foram incluídas sem substituir o resultado da aplicação por conteúdo sintetizado.
+**Capturas publicadas em 25–26/11/2026** a partir do ambiente local do projeto, usando solicitações fictícias. Incluem uma demonstração anterior em modo simulado e três capturas posteriores identificadas como execução com Gemini.
 
-> **Transparência:** o fluxo foi executado com `AI_MODE=mock`. As evidências mostram integração do n8n com Express e regras de triagem. Não demonstram inferência de IA generativa, que permaneceu pendente por retorno HTTP 429.
+> **Transparência:** a série numerada de 01 a 13 corresponde à execução `AI_MODE=mock`, sem IA generativa. Os três arquivos `IA_REAL` foram adicionados depois e associados pela responsável à execução local Gemini. Sua existência no GitHub foi confirmada; o conteúdo visual exato não foi verificado nesta revisão.
 
-| Arquivo | O que comprova |
+## Prints enviados para a execução Gemini
+
+| Arquivo | O que documenta | 
+|---|---|
+| [`API IA_REAL.png`](API%20IA_REAL.png) | Captura enviada como evidência da saída do Node 03 com Gemini; conferir visualmente o campo `modo: IA_REAL` |
+| [`Fluxo IA_REAL.png`](Fluxo%20IA_REAL.png) | Captura enviada do fluxo n8n; conferir se os seis nodes terminaram sem erro |
+| [`RESPOSTA DE PROTOCOLO IA_REAL.png`](RESPOSTA%20DE%20PROTOCOLO%20IA_REAL.png) | Captura enviada da resposta final com protocolo de atendimento |
+
+As capturas foram publicadas no [commit `6117d4a`](https://github.com/talita-olv/kodie-triagem-inteligente/commit/6117d4a) e estão incorporadas no [README principal](../../README.md).
+
+## Prints da demonstração anterior (`AI_MODE=mock`)
+
+| Arquivo | O que documenta |
 |---|---|
 | `01-fluxo-completo.png` | Workflow com os seis nodes conectados e verdes após execução |
 | `01a-fluxo-detalhe-recorte.png` | Recorte ampliado da imagem anterior, sem modificação de dados/resultados |
@@ -26,6 +38,6 @@
 2. Configure a credencial `Header Auth` (nome do header `x-api-key`, valor do `.env`) nos nodes 03 e 05.
 3. Execute `AI_MODE=mock` e envie `examples/solicitacao-critica.json` ao Webhook de teste.
 4. Compare o seu retorno com as capturas de saída e do protocolo.
-5. Para a avaliação obrigatória de IA real, troque para `AI_MODE=live` **somente com credenciais/quota válidas** e anexe capturas adicionais da execução live.
+5. Para revisar a execução de IA real, use `AI_MODE=live` e `AI_PROVIDER=gemini` com chave válida, confira a classificação do Node 03 (`modo: IA_REAL`) e compare com os três PNGs já enviados. Preserve a série antiga para fins de rastreabilidade.
 
-**Segurança:** as imagens não incluem o conteúdo do `.env` nem o valor de segredo da credencial; o repositório nunca deve incluir esses arquivos.
+**Segurança:** nunca inclua `.env` nem valores de `GEMINI_API_KEY` ou `API_ACCESS_KEY`. Verifique também que os prints não exponham credenciais antes de reutilizá-los.
