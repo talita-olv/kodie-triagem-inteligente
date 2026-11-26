@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#102a43" />
+  <meta name="description" content="Painel educacional KODIE para triagem inteligente de solicitações de manutenção." />
+  <title>KODIE | Central de Triagem Inteligente</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">K</div>
+        <div><strong>KODIE</strong><span>IA & Automação</span></div>
+      </div>
+      <div class="nav-caption">AMBIENTE DE DEMONSTRAÇÃO</div>
+      <nav aria-label="Navegação principal">
+        <a class="nav-item active" href="#solicitacao"><span class="nav-icon">▦</span> Nova solicitação</a>
+        <a class="nav-item" href="#resultado"><span class="nav-icon">◎</span> Resultado da análise</a>
+        <a class="nav-item" href="#historico"><span class="nav-icon">▤</span> Histórico e protocolos</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-note">
+          <span class="note-sparkle">✦</span>
+          <strong>Integração real</strong>
+          <p>Gemini + API Express + n8n. A automação continua acessível pelo editor do n8n.</p>
+        </div>
+        <div class="sidebar-footer">Projeto integrador KODIE · Uso educacional</div>
+      </div>
+    </aside>
+    <main class="content">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Projeto KODIE</span><span class="slash">/</span><strong>Central de Triagem</strong></div>
+        <div class="topbar-right"><span id="server-chip" class="status-chip idle"><span class="status-dot"></span> Verificando API</span><a class="text-link" href="https://github.com/talita-olv/kodie-triagem-inteligente" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>
+      </header>
+      <div class="main-inner">
+        <section class="welcome">
+          <div>
+            <span class="eyebrow"><span class="eyebrow-dot"></span> PROJETO INTEGRADOR · CASO 4.3</span>
+            <h1>Central de Triagem <span>Inteligente</span></h1>
+            <p>Transforme relatos de manutenção em solicitações classificadas, com prioridade, fila responsável e rastreabilidade.</p>
+          </div>
+          <div class="welcome-visual" aria-hidden="true">
+            <div class="visual-ring ring-one"></div><div class="visual-ring ring-two"></div>
+            <div class="visual-core">✦</div>
+            <span class="orbit orbit-a">IA</span><span class="orbit orbit-b">API</span><span class="orbit orbit-c">n8n</span>
+          </div>
+        </section>
+        <section class="metrics" aria-label="Indicadores">
+          <article class="metric"><span>Solicitações registradas</span><strong id="metric-total">—</strong><small>Na fila local da API</small></article>
+          <article class="metric"><span>Prioridade crítica (P1)</span><strong id="metric-p1">—</strong><small>Registros consultados</small></article>
+          <article class="metric"><span>Aguardando revisão</span><strong id="metric-revisao">—</strong><small>Avaliação humana necessária</small></article>
+          <article class="metric metric-mode"><span>Modo de processamento</span><strong id="metric-mode">—</strong><small id="metric-provider">Conecte à API para consultar</small></article>
+        </section>
+
+        <section class="workspace" id="solicitacao">
+          <div class="section-heading"><div><span class="kicker">01 / ENTRADA</span><h2>Nova solicitação</h2><p>Informe um relato fictício para que o sistema organize o atendimento.</p></div><span class="pill">Formulário inteligente</span></div>
+          <div class="workspace-grid">
+            <form id="form-solicitacao" class="panel form-panel">
+              <div class="form-grid">
+                <label><span>ID da solicitação <em>(opcional)</em></span><input id="solicitacao-id" name="id" maxlength="80" placeholder="Gerado automaticamente" autocomplete="off" /></label>
+                <label><span>Unidade / planta</span><input id="solicitacao-unidade" name="unidade" maxlength="150" placeholder="Ex.: Elevatória Escola - Fictícia" value="Elevatória Escola - Fictícia" /></label>
+              </div>
+              <label class="full-label"><span>Descrição da ocorrência <b>*</b></span><textarea id="solicitacao-descricao" name="descricao" minlength="15" maxlength="4000" rows="6" required placeholder="Descreva o problema, impacto operacional e contexto..."></textarea></label>
+              <div class="form-meta"><small>Utilize apenas exemplos fictícios. Não envie dados reais de clientes ou instalações.</small><button type="button" id="sample-button" class="ghost-button">Inserir exemplo crítico</button></div>
+              <div class="config-divider"></div>
+              <div class="auth-row">
+                <label class="auth-label"><span>Chave interna da API <b>*</b></span><input type="password" id="api-key" autocomplete="off" placeholder="API_ACCESS_KEY do seu .env" required /></label>
+                <div class="security-caption">A chave permanece somente na memória da página e não é armazenada no navegador.</div>
+              </div>
+              <fieldset class="mode-select">
+                <legend>Como deseja processar?</legend>
+                <label class="mode-card"><input type="radio" name="execution-mode" value="n8n" checked /><span><strong>Fluxo completo pelo n8n</strong><small>Execute “Listen for test event” no Webhook do n8n antes de enviar.</small></span></label>
+                <label class="mode-card"><input type="radio" name="execution-mode" value="api" /><span><strong>Direto pela API Gemini</strong><small>Classifica e registra sem percorrer os nodes do n8n.</small></span></label>
+              </fieldset>
+              <div class="actions">
+                <button type="submit" id="submit-button" class="primary-button"><span>✦</span> <span id="submit-label">Analisar solicitação</span></button>
+                <button type="reset" class="secondary-button">Limpar formulário</button>
+              </div>
+              <div id="form-feedback" class="feedback" role="status" aria-live="polite"></div>
+            </form>
+
+            <aside class="panel flow-panel">
+              <div class="mini-head"><span class="kicker">ARQUITETURA DO PROCESSO</span><span class="light-indicator"></span></div>
+              <h3>Da mensagem à decisão</h3>
+              <div class="flow-diagram">
+                <div class="flow-step"><span class="flow-number">01</span><div><strong>Recebimento</strong><small>Formulário / Webhook</small></div><span class="flow-symbol">↳</span></div>
+                <div class="flow-connector"></div>
+                <div class="flow-step"><span class="flow-number">02</span><div><strong>Interpretação</strong><small>Gemini + prompt estruturado</small></div><span class="flow-symbol">✦</span></div>
+                <div class="flow-connector"></div>
+                <div class="flow-step"><span class="flow-number">03</span><div><strong>Regras de criticidade</strong><small>Segurança e prioridade P1–P4</small></div><span class="flow-symbol">◇</span></div>
+                <div class="flow-connector"></div>
+                <div class="flow-step"><span class="flow-number">04</span><div><strong>Registro</strong><small>Fila, status e protocolo</small></div><span class="flow-symbol">✓</span></div>
+              </div>
+              <div class="info-box"><strong>Validação humana</strong><p>O sistema apoia a triagem, mas não autoriza manutenção em campo nem substitui a avaliação de segurança.</p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="resultado" class="results-section">
+          <div class="section-heading"><div><span class="kicker">02 / RESULTADO</span><h2>Resultado da análise</h2></div></div>
+          <div class="panel result-panel" id="result-panel">
+            <div id="empty-result" class="empty-state"><span class="empty-icon">◎</span><strong>Nenhuma análise realizada nesta sessão</strong><p>Preencha uma solicitação e clique em “Analisar solicitação” para visualizar a classificação.</p></div>
+            <div id="result-content" class="result-content" hidden>
+              <div class="result-head"><div><span class="kicker">RESULTADO DA TRIAGEM</span><h3 id="result-title">Solicitação processada</h3><small id="result-id">—</small></div><span id="result-priority" class="priority-badge">—</span></div>
+              <div class="result-grid">
+                <div><span>Categoria</span><strong id="result-category">—</strong></div><div><span>Setor responsável</span><strong id="result-sector">—</strong></div>
+                <div><span>Fila</span><strong id="result-queue">—</strong></div><div><span>Status</span><strong id="result-status">—</strong></div>
+                <div><span>Protocolo</span><strong id="result-protocol">—</strong></div><div><span>Modo</span><strong id="result-mode">—</strong></div>
+              </div>
+              <div id="result-review" class="review-note" hidden>⚠ Esta solicitação exige revisão humana.</div>
+              <div id="result-summary" class="result-summary" hidden></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="historico" class="history-section">
+          <div class="section-heading"><div><span class="kicker">03 / RASTREABILIDADE</span><h2>Histórico de protocolos</h2><p>Registros armazenados pela API local, incluindo solicitações processadas pelo n8n.</p></div><button id="refresh-button" class="secondary-button" type="button">↻ Atualizar histórico</button></div>
+          <div class="panel history-table-wrap">
+            <table><thead><tr><th>Protocolo</th><th>Resumo</th><th>Setor</th><th>Prioridade</th><th>Status</th></tr></thead><tbody id="history-body"><tr><td colspan="5" class="empty-row">Informe a chave e clique em “Atualizar histórico”.</td></tr></tbody></table>
+          </div>
+          <p class="footer-legal">KODIE · Projeto educacional • Solicitações fictícias • Sem integração com SAP ou sistemas operacionais reais.</p>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
