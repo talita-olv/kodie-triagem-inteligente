@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateSolicitacao } from '../src/validation.js';
-import { classifyMock, classifyLive, validateAIOutput } from '../src/ai.js';
+import { classifyMock, classifyLive, classifyGeminiLive, classify, validateAIOutput } from '../src/ai.js';
 import { triage } from '../src/rules.js';
 import { FILAS } from '../src/constants.js';
 
@@ -59,4 +59,54 @@ test('integracao HTTP real estruturada: teste do cliente com rede simulada', asy
 });
 test('falha externa nao e convertida silenciosamente em resultado simulado', async () => {
   await assert.rejects(() => classifyLive(item, {env:{OPENAI_API_KEY:'fake'}, fetchImpl:async()=>{throw Error('offline')}}), /Falha de conexao/);
+});
+
+test('Gemini envia instrucao, JSON Schema e classifica resposta real simulada de rede', async () => {
+  let request;
+  const response = await classifyGeminiLive(item, {
+    env: { GEMINI_API_KEY: 'fake_gemini_test', GEMINI_MODEL: 'gemini-3.5-flash-lite' },
+    fetchImpl: async (url, init) => {
+      assert.match(url, /gemini-3\.5-flash-lite:generateContent$/);
+      assert.equal(init.headers['x-goog-api-key'], 'fake_gemini_test');
+      request = JSON.parse(init.body);
+      return { ok: true, json: async () => ({
+        candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify(ai) }] } }]
+      }) };
+    }
+  });
+  assert.equal(response.categoria, 'CORRETIVA');
+  assert.equal(request.generationConfig.responseMimeType, 'application/json');
+  assert.equal(request.generationConfig.responseJsonSchema.type, 'object');
+  assert.ok(request.systemInstruction.parts[0].text.includes('TRIAGEM'));
+});
+test('AI_PROVIDER=gemini encaminha corretamente, sem cair no modo mock', async () => {
+  const response = await classify(item, {
+    env: { AI_MODE: 'live', AI_PROVIDER: 'gemini', GEMINI_API_KEY: 'fake_for_test' },
+    fetchImpl: async () => ({ ok: true, json: async () => ({
+      candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify(ai) }] } }]
+    }) })
+  });
+  assert.equal(response.revisao_humana, false);
+});
+test('Gemini rejeita falta de credenciais e erros HTTP sem retornar simulacao', async () => {
+  await assert.rejects(
+    () => classifyGeminiLive(item, { env: {} }),
+    /Configure GEMINI_API_KEY/
+  );
+  await assert.rejects(
+    () => classifyGeminiLive(item, { env: { GEMINI_API_KEY: 'fake_for_test' }, fetchImpl: async () => ({ ok: false, status: 429 }) }),
+    /HTTP 429/
+  );
+});
+test('Gemini rejeita JSON incompleto e prioridade fora do contrato', async () => {
+  await assert.rejects(
+    () => classifyGeminiLive(item, { env: { GEMINI_API_KEY: 'fake_for_test' }, fetchImpl: async () => ({
+      ok: true, json: async () => ({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [{ text: JSON.stringify(ai) }] } }] })
+    }) }), /nao concluiu/
+  );
+  await assert.rejects(
+    () => classifyGeminiLive(item, { env: { GEMINI_API_KEY: 'fake_for_test' }, fetchImpl: async () => ({
+      ok: true, json: async () => ({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify({ ...ai, setor: 'INEXISTENTE' }) }] } }] })
+    }) }), /formato/
+  );
 });
