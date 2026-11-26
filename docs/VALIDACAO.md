@@ -13,12 +13,12 @@
 - Regras elevaram prioridade da parada de bombeamento para **P1**, setor **ELETROMECANICA**, fila **fila-emec**, revisão humana `true`.
 - Node 05 registrou a ocorrência fictícia, com `novo: true` e protocolo gerado; node 06 devolveu o resultado ao cliente.
 
-## Integração real: Gemini implementado e sucesso local relatado, evidências remotas pendentes
+## Integração com Gemini: código implementado, execução local informada e três capturas publicadas
 
 - **26/11/2026:** suporte ao Gemini Developer API (modelo padrao `gemini-3.5-flash-lite`) adicionado ao backend, com testes automatizados de contrato usando uma resposta HTTP simulada; a integracao deve ser validada com chave e quota reais.
 - A pessoa responsável informou que configurou `AI_PROVIDER=gemini`, `AI_MODE=live`, executou os testes locais e colocou novos prints na pasta do projeto.
-- **Verificação remota em 26/11/2026:** os prints novos de Gemini ainda não estão presentes na branch `main`, conforme lista de arquivos em `docs/evidencias/`; as capturas publicadas permanecem relativas a `SIMULACAO_SEM_IA`.
-- Portanto, ainda é necessário publicar provas do resultado `"modo":"IA_REAL"` e do fluxo n8n concluído com Gemini. O relato de sucesso local não equivale a evidência visual já disponível no GitHub.
+- **Verificação da publicação em 26/11/2026:** os arquivos `API IA_REAL.png`, `Fluxo IA_REAL.png` e `RESPOSTA DE PROTOCOLO IA_REAL.png` estão disponíveis na branch `main` na pasta `docs/evidencias/`, enviados no commit [`6117d4a`](https://github.com/talita-olv/kodie-triagem-inteligente/commit/6117d4a).
+- A revisão verificou **nomes, existência e publicação dos três PNGs**, mas não pôde inspecionar os pixels desses arquivos pelo conector. Portanto, a confirmação independente dos valores `"modo":"IA_REAL"`, execução 6/6 e conteúdo do protocolo permanece dependente de inspeção visual dos arquivos. O sucesso local foi informado pela pessoa responsável.
 - Configuração: `AI_PROVIDER=gemini`, `AI_MODE=live`, `GEMINI_API_KEY` e `docs/GUIA_GEMINI.md`.
 
 ## Historico da integracao OpenAI
@@ -33,20 +33,20 @@
 |---|---|
 | API funcional com Express | Comprovada localmente |
 | Prompt estruturado + JSON Schema | Implementado em `src/prompt.js` |
-| Resposta JSON organizada | Demonstrada em mock; suporte a Gemini implementado; aguardando captura live publicada |
+| Resposta JSON organizada | Demonstrada em mock; implementação Gemini e três capturas nomeadas IA_REAL publicadas; verificar conteúdo da classificação |
 | Fluxo n8n funcional | Comprovado, 6/6 nodes |
 | Integração API ↔ n8n | Comprovada em modo mock |
 | Prints do fluxo e dos nodes | Incluídos em `docs/evidencias/` |
 | README e instruções de execução | Incluídos |
 | Código-fonte e JSON do n8n | Incluídos |
-| Teste fim a fim com IA real | **Sucesso Gemini informado pela pessoa responsável; prints ainda não encontrados no repositório**. HTTP 429 corresponde à tentativa antiga com OpenAI. |
+| Teste fim a fim com IA real | **Sucesso Gemini informado, três capturas publicadas**; retorno do modelo ainda não auditado visualmente nesta revisão. HTTP 429 refere-se à OpenAI original. |
 | Link do repositório publicado | **Confirmado**: https://github.com/talita-olv/kodie-triagem-inteligente |
 
 ## Critério para declarar a entrega final completa
 
 1. Conferir localmente `AI_MODE=live`, `AI_PROVIDER=gemini` e resposta `"modo":"IA_REAL"` na execução real.
-2. Publicar em `docs/evidencias/` os arquivos `14-gemini-classificacao-ia-real.png`, `15-gemini-fluxo-completo.png` e `16-gemini-protocolo.png` (ou equivalentes identificáveis), sem exibir chaves.
-3. Verificar pelo navegador que as imagens foram enviadas para a branch `main` e mostram a execução correta.
-4. Registrar data, resultado e arquivos publicados para finalizar a comprovação e entregar o link GitHub.
+2. Abrir os três arquivos já publicados `API IA_REAL.png`, `Fluxo IA_REAL.png` e `RESPOSTA DE PROTOCOLO IA_REAL.png` em `docs/evidencias/` e verificar, respectivamente, `"modo":"IA_REAL"`, conclusão dos seis nodes e protocolo final, sem exposição de credenciais.
+3. Confirmar que os três prints são da mesma execução real com Gemini; o nome do arquivo, sozinho, não garante esse vínculo.
+4. Com essas verificações, usar o link do GitHub na entrega.
 
 **Observação:** o modo mock não oferece decisão operacional segura. Não usar para operação em infraestrutura real.
